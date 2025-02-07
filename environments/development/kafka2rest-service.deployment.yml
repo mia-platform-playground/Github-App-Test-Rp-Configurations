@@ -1,0 +1,133 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka2rest-service
+  annotations:
+    mia-platform.eu/version: 13.6.0
+    apparmor.security.beta.kubernetes.io/allowedProfileNames: runtime/default
+    apparmor.security.beta.kubernetes.io/defaultProfileName: runtime/default
+    fluentbit.io/parser: pino
+  labels:
+    app: kafka2rest-service
+    app.kubernetes.io/name: kafka2rest-service
+    app.kubernetes.io/version: 1.1.1
+    app.kubernetes.io/component: custom
+    app.kubernetes.io/part-of: github-app-test
+    app.kubernetes.io/managed-by: mia-platform
+    mia-platform.eu/stage: development
+    mia-platform.eu/tenant: rocket-playground
+    mia-platform.eu/log-type: mia-json
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka2rest-service
+  strategy:
+    type: RollingUpdate
+  revisionHistoryLimit: 1
+  template:
+    metadata:
+      annotations:
+        mia-platform.eu/version: 13.6.0
+        apparmor.security.beta.kubernetes.io/allowedProfileNames: runtime/default
+        apparmor.security.beta.kubernetes.io/defaultProfileName: runtime/default
+        fluentbit.io/parser: pino
+      labels:
+        app: kafka2rest-service
+        app.kubernetes.io/name: kafka2rest-service
+        app.kubernetes.io/version: 1.1.1
+        app.kubernetes.io/component: custom
+        app.kubernetes.io/part-of: github-app-test
+        app.kubernetes.io/managed-by: mia-platform
+        mia-platform.eu/stage: development
+        mia-platform.eu/tenant: rocket-playground
+        mia-platform.eu/log-type: mia-json
+    spec:
+      imagePullSecrets:
+        - name: nexus-gcloud
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: kafka2rest-service
+          image: nexus.mia-platform.eu/plugins/kafka2rest:1.1.1
+          imagePullPolicy: Always
+          resources:
+            limits:
+              memory: 50Mi
+              cpu: 50m
+            requests:
+              memory: 100Mi
+              cpu: 5m
+          volumeMounts:
+            - name: kafka2rest-configs
+              mountPath: /configs
+              readOnly: true
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          args: []
+          env:
+            - name: LOG_LEVEL
+              value: '{{LOG_LEVEL}}'
+            - name: HTTP_PORT
+              value: '3000'
+            - name: USERID_HEADER_KEY
+              value: miauserid
+            - name: GROUPS_HEADER_KEY
+              value: miausergroups
+            - name: CLIENTTYPE_HEADER_KEY
+              value: client-type
+            - name: BACKOFFICE_HEADER_KEY
+              value: isbackoffice
+            - name: USER_PROPERTIES_HEADER_KEY
+              value: miauserproperties
+            - name: MICROSERVICE_GATEWAY_SERVICE_NAME
+              value: microservice-gateway
+            - name: TOPICS_REST_CONFIG_PATH
+              value: /configs/kafka2rest-config.json
+            - name: PATH_PROCESSORS_PATH
+              value: /configs/pathGenerators.js
+            - name: BODY_PROCESSORS_PATH
+              value: /configs/bodyGenerators.js
+            - name: KAFKA_CLIENT_ID
+              value: CHANGE WITH YOUR CLIENT_ID
+            - name: KAFKA_GROUP_ID
+              value: CHANGE WITH THE ID OF THE CONSUMER GROUP
+            - name: KAFKA_BROKERS_LIST
+              value: CHANGE WITH THE COMMA SEPARATED LIST OF BROKERS
+            - name: KAFKA_AUTH_METHOD
+              value: plain
+            - name: KAFKA_SASL_USERNAME
+              value: CHANGE WITH THE USERNAME
+            - name: KAFKA_SASL_PASSWORD
+              value: CHANGE WITH THE PASSWORD
+          readinessProbe:
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 1
+            successThreshold: 1
+            failureThreshold: 3
+            httpGet:
+              port: http
+              path: /-/ready
+          livenessProbe:
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 1
+            failureThreshold: 3
+            httpGet:
+              port: http
+              path: /-/healthz
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+      volumes:
+        - name: kafka2rest-configs
+          configMap:
+            name: kafka2rest-configs
+      hostIPC: false
+      hostNetwork: false
+      hostPID: false
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
