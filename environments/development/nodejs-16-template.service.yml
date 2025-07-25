@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: nodejs-16-template
   annotations:
-    mia-platform.eu/version: 13.6.0
+    mia-platform.eu/version: 14.1.0
   labels:
     app: nodejs-16-template
     app.kubernetes.io/name: nodejs-16-template

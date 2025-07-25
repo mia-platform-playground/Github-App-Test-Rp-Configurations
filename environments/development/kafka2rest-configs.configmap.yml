@@ -14,7 +14,7 @@ metadata:
   name: kafka2rest-configs
   annotations:
     mia-platform.eu/creation-user: api-console
-    mia-platform.eu/version: 13.6.0
+    mia-platform.eu/version: 14.1.0
   labels:
     app.kubernetes.io/part-of: github-app-test
     app.kubernetes.io/managed-by: mia-platform
